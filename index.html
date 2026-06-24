@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CS 상담 연결</title>
+<style>
+  :root{
+    --kakao:#FAE100; --kakao-text:#3C1E1E;
+    --bg:#f5f6f8; --card:#ffffff; --ink:#1f2328; --muted:#6b7280; --line:#e5e7eb;
+    --accent:#2563eb;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+    background:var(--bg); color:var(--ink);
+    display:flex; min-height:100vh; align-items:center; justify-content:center; padding:20px;
+  }
+  .card{
+    width:100%; max-width:440px; background:var(--card); border-radius:20px;
+    box-shadow:0 8px 30px rgba(0,0,0,.08); padding:32px 26px; text-align:center;
+  }
+  h1{font-size:21px; margin:0 0 6px;}
+  .sub{color:var(--muted); font-size:14px; margin:0 0 22px; line-height:1.5;}
+  .notice{
+    background:#fafafa; border:1px solid var(--line); border-radius:12px;
+    padding:14px 16px; text-align:left; font-size:13.5px; color:#374151; line-height:1.6; margin-bottom:22px;
+  }
+  .notice b{color:var(--ink);}
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; border:none; cursor:pointer; font-weight:700; font-size:17px;
+    padding:16px; border-radius:14px; transition:transform .05s ease, filter .15s ease;
+  }
+  .btn:active{transform:scale(.985)}
+  .btn-kakao{background:var(--kakao); color:var(--kakao-text);}
+  .btn-kakao:hover{filter:brightness(.97)}
+  .btn-ghost{
+    background:#fff; color:var(--accent); border:1px solid var(--line);
+    font-size:15px; padding:13px; margin-top:10px; font-weight:600;
+  }
+  .status{margin-top:14px; font-size:13px; color:var(--muted); min-height:18px;}
+  .foot{margin-top:22px; font-size:12px; color:#9ca3af; line-height:1.5;}
+  a{color:var(--accent); text-decoration:none;}
+
+  /* 배송조회 패널 */
+  .track{
+    margin-top:14px; border:1px solid var(--line); border-radius:14px;
+    padding:16px; text-align:left; display:none;
+  }
+  .track.open{display:block;}
+  .track label{display:block; font-size:13px; color:var(--muted); margin:0 0 6px;}
+  .track select, .track input{
+    width:100%; padding:12px 13px; font-size:15px; border:1px solid var(--line);
+    border-radius:10px; margin-bottom:12px; background:#fff; color:var(--ink);
+  }
+  .track .go{
+    background:var(--accent); color:#fff; border:none; border-radius:10px;
+    width:100%; padding:13px; font-size:15px; font-weight:700; cursor:pointer;
+  }
+  .track .go:active{transform:scale(.985)}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>📦 배송·주문 문의</h1>
+    <p class="sub">상담원이 1:1로 빠르게 도와드립니다.</p>
+
+    <div class="notice">
+      <b>먼저 확인해 주세요</b><br/>
+      · 운영시간: <b>평일 10:00~18:00</b> (주말·공휴일 휴무)<br/>
+      · 배송 위치는 아래 <b>배송 조회</b>로 즉시 확인하실 수 있어요.<br/>
+      · 운영시간 외 문의는 다음 영업일에 순차 답변드립니다.
+    </div>
+
+    <button class="btn btn-kakao" id="csBtn">💬 CS 상담하기</button>
+    <button class="btn btn-ghost" id="trackBtn">🔍 배송 조회 먼저 하기</button>
+
+    <!-- 송장번호 조회 패널 -->
+    <div class="track" id="trackPanel">
+      <label for="carrier">택배사 선택</label>
+      <select id="carrier">
+        <option value="naver">잘 모르겠어요 (네이버 통합조회 · 자동 인식)</option>
+        <option value="cj">CJ대한통운</option>
+        <option value="epost">우체국택배</option>
+        <option value="hanjin">한진택배</option>
+        <option value="lotte">롯데택배</option>
+        <option value="logen">로젠택배</option>
+      </select>
+      <label for="invoice">송장번호 (숫자만 입력)</label>
+      <input id="invoice" type="text" inputmode="numeric" placeholder="예: 123456789012" />
+      <button class="go" id="trackGo">송장번호 조회하기</button>
+      <div class="status" id="trackStatus"></div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <p class="foot">상담원에게 <b>주문번호</b>를 먼저 알려주시면 더 빨라요.</p>
+  </div>
+
+<script>
+/* ============================================================
+   설정: 여기만 수정하면 됩니다.
+   - 지금은 오픈채팅방 1개로 운영합니다.
+   - 방을 늘리면 줄을 추가하세요. 자동으로 랜덤 순차(round-robin) 분배됩니다.
+   - 휴무 상담원은 active 를 false 로.
+   ============================================================ */
+  const AGENTS = [
+    { name: "상담 1", url: "https://open.kakao.com/o/sjvNZ0Ai", active: true },
+    // { name: "상담 2", url: "https://open.kakao.com/o/여기에_방2_링크", active: true },
+    // { name: "상담 3", url: "https://open.kakao.com/o/여기에_방3_링크", active: true },
+    // { name: "상담 4", url: "https://open.kakao.com/o/여기에_방4_링크", active: true },
+  ];
+
+  /* 택배사별 송장조회 URL ( {no} 자리에 송장번호가 들어갑니다 ) */
+  const CARRIERS = {
+    naver:  "https://search.naver.com/search.naver?query={no}",
+    cj:     "https://trace.cjlogistics.com/next/tracking.html?wblNo={no}",
+    epost:  "https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm?sid1={no}&displayHeader=N",
+    hanjin: "https://www.hanjin.com/kor/CMS/DeliveryMgr/WaybillResult.do?mCode=MN038&schLang=KR&wblnumText2={no}",
+    lotte:  "https://www.lotteglogis.com/open/tracking?InvNo={no}",
+    logen:  "https://www.ilogen.com/web/personal/trace/{no}"
+  };
+
+  /* ---- 랜덤 순차(round-robin) 배정 ---- */
+  function pickAgent(){
+    const pool = AGENTS.filter(a => a.active && a.url && !a.url.includes("여기에_"));
+    if(pool.length === 0) return null;
+    let i = parseInt(localStorage.getItem("cs_rr_idx"), 10);
+    if(isNaN(i)) i = Math.floor(Math.random() * pool.length);
+    const agent = pool[i % pool.length];
+    localStorage.setItem("cs_rr_idx", String((i + 1) % pool.length));
+    return agent;
+  }
+
+  const statusEl = document.getElementById("status");
+
+  document.getElementById("csBtn").addEventListener("click", function(){
+    const agent = pickAgent();
+    if(!agent){ statusEl.textContent = "⚠️ 상담 링크가 설정되지 않았습니다."; return; }
+    statusEl.textContent = "상담원에게 연결 중입니다…";
+    window.location.href = agent.url;
+  });
+
+  /* 배송조회 패널 토글 */
+  const panel = document.getElementById("trackPanel");
+  document.getElementById("trackBtn").addEventListener("click", function(){
+    panel.classList.toggle("open");
+    if(panel.classList.contains("open")) document.getElementById("invoice").focus();
+  });
+
+  /* 송장번호 조회 실행 */
+  document.getElementById("trackGo").addEventListener("click", function(){
+    const carrier = document.getElementById("carrier").value;
+    const no = document.getElementById("invoice").value.replace(/[^0-9]/g, "");
+    const ts = document.getElementById("trackStatus");
+    if(!no){ ts.textContent = "송장번호를 입력해 주세요."; return; }
+    const url = CARRIERS[carrier].replace("{no}", encodeURIComponent(no));
+    ts.textContent = "조회 결과를 새 창에서 엽니다…";
+    window.open(url, "_blank", "noopener");
+  });
+
+  /* 엔터키로도 조회 */
+  document.getElementById("invoice").addEventListener("keydown", function(e){
+    if(e.key === "Enter") document.getElementById("trackGo").click();
+  });
+</script>
+</body>
+</html>
