@@ -102,8 +102,8 @@
 <script>
 /* ============================================================
    설정: 여기만 수정하면 됩니다.
-   - 현재 오픈채팅방 3개로 순차(랜덤) 분배 운영 중입니다.
-   - 방을 늘리거나 줄이면 아래 줄을 추가/삭제하세요. 자동으로 순차 분배됩니다.
+   - 현재 오픈채팅방 3개로 무작위(랜덤) 분배 운영 중입니다.
+   - 방을 늘리거나 줄이면 아래 줄을 추가/삭제하세요. 자동으로 랜덤 분배됩니다.
    - 휴무 상담원은 active 를 false 로.
    ============================================================ */
   const AGENTS = [
@@ -122,25 +122,14 @@
     logen:  "https://www.ilogen.com/web/personal/trace/{no}"
   };
 
-  /* ---- 배정 로직 ----
-     1순위: 순차(round-robin) — 브라우저 localStorage에 순번을 저장해 방문할 때마다
-            상담 1 → 2 → 3 → 1 ... 순으로 돌립니다. (서버 없이 기기 단위로 동작)
-     2순위: 서버가 없어 순번 저장이 불가능한 환경(시크릿 모드 등)에서는
-            매번 무작위(랜덤)로 한 명을 배정합니다.
-     첫 방문의 시작 지점도 랜덤이라 여러 고객에게 고르게 분산됩니다.            */
+  /* ---- 배정 로직 : 매번 공평한 랜덤 배정 ----
+     버튼을 누를 때마다 상담 1·2·3 중 한 명을 무작위로 고릅니다.
+     순번을 저장하지 않으므로 특정 번호가 먼저 나오지 않고,
+     클릭이 쌓일수록 각 상담원에게 약 1/N씩 고르게 분배됩니다.            */
   function pickAgent(){
     const pool = AGENTS.filter(a => a.active && a.url && !a.url.includes("여기에_"));
     if(pool.length === 0) return null;
-    try {
-      let i = parseInt(localStorage.getItem("cs_rr_idx"), 10);
-      if(isNaN(i)) i = Math.floor(Math.random() * pool.length); // 콜드 스타트 랜덤
-      const agent = pool[i % pool.length];
-      localStorage.setItem("cs_rr_idx", String((i + 1) % pool.length)); // 다음 순번 저장
-      return agent;
-    } catch (e) {
-      // localStorage 사용 불가 → 매번 랜덤 배정으로 대체
-      return pool[Math.floor(Math.random() * pool.length)];
-    }
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   const statusEl = document.getElementById("status");
