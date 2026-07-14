@@ -1,0 +1,7 @@
+{
+  "agents": [
+    { "name": "상담 1", "url": "https://open.kakao.com/o/s71Na2Ai", "active": true },
+    { "name": "상담 2", "url": "https://open.kakao.com/o/sofJx7Ai", "active": true },
+    { "name": "상담 3", "url": "https://open.kakao.com/o/sMP8j7Ai", "active": true }
+  ]
+}

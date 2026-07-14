@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>CS 상담방 관리</title>
+<style>
+  :root{
+    --kakao:#FAE100; --kakao-text:#3C1E1E;
+    --bg:#f5f6f8; --card:#ffffff; --ink:#1f2328; --muted:#6b7280; --line:#e5e7eb;
+    --accent:#2563eb; --green:#16a34a; --red:#dc2626; --gray:#9ca3af;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+    background:var(--bg); color:var(--ink);
+    display:flex; min-height:100vh; align-items:flex-start; justify-content:center; padding:20px;
+  }
+  .card{
+    width:100%; max-width:560px; background:var(--card); border-radius:20px;
+    box-shadow:0 8px 30px rgba(0,0,0,.08); padding:32px 26px;
+  }
+  h1{font-size:21px; margin:0 0 6px; text-align:center;}
+  .sub{color:var(--muted); font-size:14px; margin:0 0 22px; line-height:1.5; text-align:center;}
+  .section{
+    border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:16px;
+  }
+  .section h2{font-size:15px; margin:0 0 10px;}
+  label{display:block; font-size:13px; color:var(--muted); margin:0 0 6px;}
+  input[type=text], input[type=password]{
+    width:100%; padding:11px 12px; font-size:14px; border:1px solid var(--line);
+    border-radius:10px; background:#fff; color:var(--ink);
+  }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    border:none; cursor:pointer; font-weight:700; font-size:14px;
+    padding:11px 16px; border-radius:10px; transition:transform .05s ease, filter .15s ease;
+  }
+  .btn:active{transform:scale(.985)}
+  .btn:disabled{opacity:.5; cursor:not-allowed;}
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-primary:hover{filter:brightness(1.05)}
+  .btn-kakao{background:var(--kakao); color:var(--kakao-text); width:100%; font-size:16px; padding:15px;}
+  .btn-ghost{background:#fff; color:var(--accent); border:1px solid var(--line); font-weight:600;}
+  .btn-danger-ghost{background:#fff; color:var(--red); border:1px solid var(--line); font-weight:600;}
+  .row-actions{display:flex; gap:8px; margin-top:10px;}
+  .status{margin-top:12px; font-size:13px; color:var(--muted); min-height:18px; line-height:1.6; text-align:center;}
+  .status.err{color:var(--red);}
+  .status.ok{color:var(--green);}
+
+  /* 상담방 목록 */
+  .agent{
+    border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:10px;
+    background:#fafafa;
+  }
+  .agent.off{background:#f3f4f6; opacity:.75;}
+  .agent .top{display:flex; gap:8px; align-items:center; margin-bottom:8px;}
+  .agent .top input{flex:1; font-weight:700;}
+  .agent .url-row{margin-bottom:10px;}
+  .toggle{
+    border:none; cursor:pointer; font-weight:700; font-size:12.5px;
+    padding:8px 12px; border-radius:999px; white-space:nowrap;
+  }
+  .toggle.on{background:#dcfce7; color:var(--green);}
+  .toggle.off{background:#e5e7eb; color:#4b5563;}
+  .del{
+    background:none; border:none; cursor:pointer; color:var(--gray); font-size:18px;
+    padding:4px 8px; border-radius:8px;
+  }
+  .del:hover{color:var(--red); background:#fef2f2;}
+  .summary{
+    font-size:13.5px; color:#374151; background:#fafafa; border:1px solid var(--line);
+    border-radius:10px; padding:10px 14px; margin-bottom:12px; text-align:center;
+  }
+  .summary b{color:var(--green);}
+  .summary.warn{background:#fef2f2; border-color:#fecaca;}
+  .summary.warn b{color:var(--red);}
+  details{margin-top:10px; font-size:13px; color:#374151;}
+  details summary{cursor:pointer; color:var(--accent); font-weight:600;}
+  details ol{padding-left:18px; line-height:1.8; margin:8px 0 0;}
+  .foot{margin-top:18px; font-size:12px; color:#9ca3af; line-height:1.6; text-align:center;}
+  a{color:var(--accent); text-decoration:none;}
+  code{background:#f3f4f6; padding:1px 5px; border-radius:5px; font-size:12px;}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>🛠 CS 상담방 관리</h1>
+    <p class="sub">상담방 추가·삭제와 휴무 처리를 여기서 관리합니다.<br/>저장하면 고객센터 페이지에 자동 반영됩니다.</p>
+
+    <!-- 토큰 설정 -->
+    <div class="section" id="tokenSection">
+      <h2>🔑 관리자 인증</h2>
+      <label for="token">GitHub 토큰 (이 브라우저에만 저장됩니다)</label>
+      <input id="token" type="password" placeholder="github_pat_… 또는 ghp_…" autocomplete="off" />
+      <div class="row-actions">
+        <button class="btn btn-primary" id="tokenSave">토큰 저장</button>
+        <button class="btn btn-danger-ghost" id="tokenClear">토큰 삭제</button>
+      </div>
+      <details>
+        <summary>토큰 만드는 방법 (최초 1회)</summary>
+        <ol>
+          <li>저장소 소유 계정(YIGAM1289)으로 GitHub 로그인</li>
+          <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Fine-grained token 만들기</a> 접속</li>
+          <li>Token name: <code>cs-link-admin</code>, Expiration: 1년</li>
+          <li>Repository access: <b>Only select repositories</b> → <code>cs-link</code> 선택</li>
+          <li>Permissions → Repository permissions → <b>Contents: Read and write</b></li>
+          <li>Generate token 후 <code>github_pat_…</code> 값을 위에 붙여넣고 토큰 저장</li>
+        </ol>
+      </details>
+      <div class="status" id="tokenStatus"></div>
+    </div>
+
+    <!-- 상담방 목록 -->
+    <div class="section" id="listSection" style="display:none;">
+      <h2>💬 상담방 목록</h2>
+      <div class="summary" id="summary"></div>
+      <div id="agentList"></div>
+      <div class="row-actions">
+        <button class="btn btn-ghost" id="addBtn">＋ 상담방 추가</button>
+        <button class="btn btn-ghost" id="reloadBtn">↻ 다시 불러오기</button>
+      </div>
+    </div>
+
+    <div id="saveArea" style="display:none;">
+      <button class="btn btn-kakao" id="saveBtn">💾 저장하고 반영하기</button>
+      <div class="status" id="saveStatus"></div>
+    </div>
+
+    <p class="foot">
+      저장 후 실제 페이지 반영까지 <b>1~2분</b> 정도 걸릴 수 있습니다.<br/>
+      고객센터 페이지: <a href="./index.html">열어서 확인하기</a>
+    </p>
+  </div>
+
+<script>
+  const OWNER = "YIGAM1289";
+  const REPO  = "cs-link";
+  const PATH  = "agents.json";
+  const API   = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`;
+  const TOKEN_KEY = "cslink_admin_token";
+
+  let agents = [];   // 편집 중인 목록
+  let fileSha = null; // 마지막으로 불러온 agents.json 의 sha (충돌 감지용)
+
+  const $ = id => document.getElementById(id);
+
+  /* ---------- UTF-8 안전 base64 ---------- */
+  function b64encode(str){
+    return btoa(String.fromCharCode(...new TextEncoder().encode(str)));
+  }
+  function b64decode(b64){
+    return new TextDecoder().decode(Uint8Array.from(atob(b64), c => c.charCodeAt(0)));
+  }
+
+  /* ---------- 토큰 ---------- */
+  function getToken(){ return localStorage.getItem(TOKEN_KEY) || ""; }
+
+  $("tokenSave").addEventListener("click", () => {
+    const t = $("token").value.trim();
+    if(!t){ setStatus("tokenStatus", "토큰을 입력해 주세요.", "err"); return; }
+    localStorage.setItem(TOKEN_KEY, t);
+    $("token").value = "";
+    setStatus("tokenStatus", "토큰이 저장되었습니다. 목록을 불러옵니다…", "ok");
+    loadAgents();
+  });
+
+  $("tokenClear").addEventListener("click", () => {
+    localStorage.removeItem(TOKEN_KEY);
+    $("listSection").style.display = "none";
+    $("saveArea").style.display = "none";
+    setStatus("tokenStatus", "토큰이 삭제되었습니다.", "ok");
+  });
+
+  function setStatus(id, msg, cls){
+    const el = $(id);
+    el.textContent = msg;
+    el.className = "status" + (cls ? " " + cls : "");
+  }
+
+  /* ---------- 불러오기 ---------- */
+  async function loadAgents(){
+    const token = getToken();
+    if(!token){ setStatus("tokenStatus", "먼저 토큰을 저장해 주세요.", "err"); return; }
+    setStatus("tokenStatus", "목록을 불러오는 중…");
+    try{
+      const res = await fetch(API + "?t=" + Date.now(), {
+        headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github+json" }
+      });
+      if(res.status === 401){ setStatus("tokenStatus", "토큰이 올바르지 않습니다. 다시 확인해 주세요.", "err"); return; }
+      if(res.status === 404){
+        // 파일이 아직 없으면 빈 목록으로 시작 (저장 시 새로 생성)
+        agents = []; fileSha = null;
+        showList();
+        setStatus("tokenStatus", "agents.json 이 없어 새로 만듭니다. 상담방을 추가해 주세요.", "ok");
+        return;
+      }
+      if(!res.ok){ setStatus("tokenStatus", "불러오기 실패 (HTTP " + res.status + ")", "err"); return; }
+      const data = await res.json();
+      fileSha = data.sha;
+      const parsed = JSON.parse(b64decode(data.content.replace(/\n/g, "")));
+      agents = Array.isArray(parsed.agents) ? parsed.agents : [];
+      showList();
+      setStatus("tokenStatus", "불러오기 완료 ✓", "ok");
+    }catch(e){
+      setStatus("tokenStatus", "불러오기 중 오류: " + e.message, "err");
+    }
+  }
+
+  function showList(){
+    $("listSection").style.display = "block";
+    $("saveArea").style.display = "block";
+    render();
+  }
+
+  /* ---------- 목록 렌더링 ---------- */
+  function render(){
+    const list = $("agentList");
+    list.innerHTML = "";
+    agents.forEach((a, i) => {
+      const box = document.createElement("div");
+      box.className = "agent" + (a.active ? "" : " off");
+
+      const top = document.createElement("div");
+      top.className = "top";
+
+      const nameIn = document.createElement("input");
+      nameIn.type = "text";
+      nameIn.value = a.name;
+      nameIn.placeholder = "상담방 이름 (예: 상담 4)";
+      nameIn.addEventListener("input", () => { a.name = nameIn.value; });
+
+      const tg = document.createElement("button");
+      tg.className = "toggle " + (a.active ? "on" : "off");
+      tg.textContent = a.active ? "✅ 근무중" : "🌙 휴무";
+      tg.title = "누르면 근무/휴무가 바뀝니다";
+      tg.addEventListener("click", () => { a.active = !a.active; render(); });
+
+      const del = document.createElement("button");
+      del.className = "del";
+      del.textContent = "🗑";
+      del.title = "이 상담방 삭제";
+      del.addEventListener("click", () => {
+        if(confirm(`"${a.name}" 상담방을 삭제할까요?`)){ agents.splice(i, 1); render(); }
+      });
+
+      top.append(nameIn, tg, del);
+
+      const urlRow = document.createElement("div");
+      urlRow.className = "url-row";
+      const urlIn = document.createElement("input");
+      urlIn.type = "text";
+      urlIn.value = a.url;
+      urlIn.placeholder = "https://open.kakao.com/o/…";
+      urlIn.addEventListener("input", () => { a.url = urlIn.value; });
+      urlRow.append(urlIn);
+
+      box.append(top, urlRow);
+      list.append(box);
+    });
+    updateSummary();
+  }
+
+  function updateSummary(){
+    const total = agents.length;
+    const on = agents.filter(a => a.active).length;
+    const el = $("summary");
+    if(total === 0){
+      el.className = "summary warn";
+      el.innerHTML = "상담방이 없습니다. <b>＋ 상담방 추가</b>로 등록해 주세요.";
+    }else if(on === 0){
+      el.className = "summary warn";
+      el.innerHTML = `전체 ${total}개 모두 휴무입니다. <b>고객이 상담 연결을 할 수 없어요!</b>`;
+    }else{
+      el.className = "summary";
+      el.innerHTML = `근무중 <b>${on}</b> / 전체 ${total} — 근무중인 방으로만 랜덤 분배됩니다.`;
+    }
+  }
+
+  $("addBtn").addEventListener("click", () => {
+    agents.push({ name: "상담 " + (agents.length + 1), url: "", active: true });
+    render();
+    const inputs = $("agentList").querySelectorAll(".url-row input");
+    if(inputs.length) inputs[inputs.length - 1].focus();
+  });
+
+  $("reloadBtn").addEventListener("click", loadAgents);
+
+  /* ---------- 저장 ---------- */
+  $("saveBtn").addEventListener("click", async () => {
+    // 검증
+    for(const a of agents){
+      if(!a.name.trim()){ setStatus("saveStatus", "이름이 비어 있는 상담방이 있습니다.", "err"); return; }
+      if(!a.url.trim()){ setStatus("saveStatus", `"${a.name}" 의 링크가 비어 있습니다.`, "err"); return; }
+      if(!/^https:\/\//.test(a.url.trim())){ setStatus("saveStatus", `"${a.name}" 링크는 https:// 로 시작해야 합니다.`, "err"); return; }
+      if(!a.url.includes("open.kakao.com")){
+        if(!confirm(`"${a.name}" 링크가 카카오 오픈채팅 주소가 아닌 것 같습니다:\n${a.url}\n\n이대로 저장할까요?`)) return;
+      }
+    }
+    const on = agents.filter(a => a.active).length;
+    if(agents.length > 0 && on === 0){
+      if(!confirm("모든 상담방이 휴무 상태입니다.\n고객이 CS 상담 버튼을 눌러도 연결되지 않습니다.\n\n정말 저장할까요?")) return;
+    }
+
+    const token = getToken();
+    if(!token){ setStatus("saveStatus", "토큰이 없습니다. 위에서 먼저 저장해 주세요.", "err"); return; }
+
+    const clean = agents.map(a => ({ name: a.name.trim(), url: a.url.trim(), active: !!a.active }));
+    const content = JSON.stringify({ agents: clean }, null, 2) + "\n";
+
+    const body = {
+      message: `상담방 설정 변경 (근무중 ${on}/${clean.length}) — 관리 페이지에서 수정`,
+      content: b64encode(content)
+    };
+    if(fileSha) body.sha = fileSha;
+
+    $("saveBtn").disabled = true;
+    setStatus("saveStatus", "저장 중…");
+    try{
+      const res = await fetch(API, {
+        method: "PUT",
+        headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github+json" },
+        body: JSON.stringify(body)
+      });
+      if(res.status === 409){
+        setStatus("saveStatus", "다른 곳에서 먼저 수정되었습니다. '다시 불러오기' 후 재시도해 주세요.", "err");
+        return;
+      }
+      if(res.status === 401 || res.status === 403){
+        setStatus("saveStatus", "권한 오류입니다. 토큰의 Contents 권한(Read and write)을 확인해 주세요.", "err");
+        return;
+      }
+      if(!res.ok){ setStatus("saveStatus", "저장 실패 (HTTP " + res.status + ")", "err"); return; }
+      const data = await res.json();
+      fileSha = data.content.sha;
+      setStatus("saveStatus", "저장 완료 ✓ 실제 페이지 반영까지 1~2분 걸릴 수 있습니다.", "ok");
+    }catch(e){
+      setStatus("saveStatus", "저장 중 오류: " + e.message, "err");
+    }finally{
+      $("saveBtn").disabled = false;
+    }
+  });
+
+  /* ---------- 시작 ---------- */
+  if(getToken()){
+    setStatus("tokenStatus", "저장된 토큰이 있습니다.", "ok");
+    loadAgents();
+  }
+</script>
+</body>
+</html>

@@ -101,16 +101,22 @@
 
 <script>
 /* ============================================================
-   설정: 여기만 수정하면 됩니다.
-   - 현재 오픈채팅방 3개로 무작위(랜덤) 분배 운영 중입니다.
-   - 방을 늘리거나 줄이면 아래 줄을 추가/삭제하세요. 자동으로 랜덤 분배됩니다.
-   - 휴무 상담원은 active 를 false 로.
+   상담방 목록은 agents.json 에서 불러옵니다.
+   - 추가·삭제·휴무 처리는 관리 페이지(admin.html)에서 하세요.
+   - agents.json 을 불러오지 못하면 아래 기본 목록으로 동작합니다.
    ============================================================ */
-  const AGENTS = [
+  const DEFAULT_AGENTS = [
     { name: "상담 1", url: "https://open.kakao.com/o/s71Na2Ai", active: true },
     { name: "상담 2", url: "https://open.kakao.com/o/sofJx7Ai", active: true },
     { name: "상담 3", url: "https://open.kakao.com/o/sMP8j7Ai", active: true },
   ];
+  let AGENTS = DEFAULT_AGENTS;
+  fetch("agents.json?v=" + Date.now(), { cache: "no-store" })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(data => {
+      if (data && Array.isArray(data.agents) && data.agents.length) AGENTS = data.agents;
+    })
+    .catch(() => { /* 로드 실패 시 기본 목록 유지 */ });
 
   /* 택배사별 송장조회 URL ( {no} 자리에 송장번호가 들어갑니다 ) */
   const CARRIERS = {
