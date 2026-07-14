@@ -346,6 +346,8 @@
   if(getToken()){
     setStatus("tokenStatus", "저장된 토큰이 있습니다.", "ok");
     loadAgents();
+  }else{
+    setStatus("tokenStatus", "관리자에게 받은 토큰을 위 칸에 붙여넣고 '토큰 저장'을 누르면 상담방 목록이 표시됩니다.");
   }
 </script>
 </body>
