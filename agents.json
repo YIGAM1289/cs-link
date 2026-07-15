@@ -1,17 +1,17 @@
 {
   "agents": [
     {
-      "name": "상담 1",
+      "name": "상담 1 / 안혜진",
       "url": "https://open.kakao.com/o/s71Na2Ai",
       "active": true
     },
     {
-      "name": "상담 2",
+      "name": "상담 2 / 김혜진",
       "url": "https://open.kakao.com/o/sofJx7Ai",
-      "active": true
+      "active": false
     },
     {
-      "name": "상담 3",
+      "name": "상담 3 / 김희원",
       "url": "https://open.kakao.com/o/sMP8j7Ai",
       "active": true
     }
