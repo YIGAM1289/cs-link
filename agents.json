@@ -8,12 +8,12 @@
     {
       "name": "상담 2 / 김혜진",
       "url": "https://open.kakao.com/o/sofJx7Ai",
-      "active": false
+      "active": true
     },
     {
       "name": "상담 3 / 김희원",
       "url": "https://open.kakao.com/o/sMP8j7Ai",
-      "active": false
+      "active": true
     }
   ]
 }
